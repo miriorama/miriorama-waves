@@ -191,75 +191,64 @@ var MIRIO = (function(){
 
 MIRIO.init();
 
-var DB = (function(){  
+var DB = (function(){
+  let db = {};
   let conn = firebase.database();
     
   var opt = {
   }
   
-  var db = {
-    init: function () {
+  db.init = function () {
+    
+  }
+  
+  db.load = function(id, callback) {
+    return conn.ref('/waves/' + id).once('value').then(function(obj) {
+        var data = obj.val() || null;
+        console.log('Circle loaded.');
+        if (typeof callback === 'function') {
+            callback(data);
+        }
+    });
+  }
+  
+  db.save = function(id, data, callback) {
+    if (id) {
+      // update
       
-    },
-    
-    load: function(id, callback) {
-      return conn.ref('/waves/' + id).once('value').then(function(obj) {
-          var data = obj.val() || null;
-          console.log('Circle loaded.');
-          if (typeof callback === 'function') {
-              callback(data);
-          }
-      });
-    },
-    
-    save: function(id, data, callback) {
-      if (id) {
-        // update
+      conn.ref('waves/' + id).set(data);
+    } else {
+      // insert
+      
+      var waves = conn.ref('waves/');
+      var newWave = waves.push();
+      newWave.set(data, function() {
+        console.log('New circle saved at: ' + newWave.key);
         
-        conn.ref('waves/' + id).set(data);
-      } else {
-        // insert
+        db.upload(newWave.key);
         
-        var waves = conn.ref('waves/');
-        var newWave = waves.push();
-        newWave.set(data, function() {
-          console.log('New circle saved at: ' + newWave.key);
-          
-          db.upload(newWave.key);
-          
-          if (typeof callback === 'function') {
-              callback();
-          }          
-        });
-      }
-    },
-    
-    upload: function(id) {
-      const SVG_DOCTYPE = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
-      var storageRef = firebase.storage().ref();
-      var image = storageRef.child('waves/' + id + '.svg');
-      var svg = document.getElementById('svg');
-      var content = SVG_DOCTYPE + (new XMLSerializer()).serializeToString(svg).replace();
-      
-      let metadata = {
-        contentType: 'image/svg+xml'
-      };      
-      image.putString(content, 'raw', metadata).then(function(snapshot) {
-        console.log('Uploaded a new file at ' + snapshot);
+        if (typeof callback === 'function') {
+            callback();
+        }          
       });
-      
     }
   }
-  return {
-    init: function() {
-      return db.init();
-    },
-    save: function(id, data, callback) {
-      return db.save(id, data, callback);
-    },
-    load: function(id, callback) {
-      return db.load(id, callback);
-    }
+  
+  db.upload = function(id) {
+    const SVG_DOCTYPE = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
+    var storageRef = firebase.storage().ref();
+    var image = storageRef.child('waves/' + id + '.svg');
+    var svg = document.getElementById('svg');
+    var content = SVG_DOCTYPE + (new XMLSerializer()).serializeToString(svg).replace();
+    
+    let metadata = {
+      contentType: 'image/svg+xml'
+    };      
+    image.putString(content, 'raw', metadata).then(function(snapshot) {
+      console.log('Uploaded a new file at ' + snapshot);
+    });
+    
   }
-
+  
+  return db;
 })();

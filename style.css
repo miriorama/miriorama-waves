@@ -14,10 +14,10 @@ body {
 }
 
 svg {
-  width: 49vmin;
-  height: 70vmin;
-  box-shadow: 0px 0 50px #d2d2d2;
-  padding: 10vmin 8vmin;
+  width: 63vmin;
+  height: 90vmin;
+  box-shadow: 0px 2px 10px #b5b5b5;
+  /*padding: 10vmin 8vmin;*/
 }
 
 div.sidebar {
